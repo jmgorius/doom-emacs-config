@@ -1,0 +1,133 @@
+#+TITLE: Doom Emacs Configuration
+#+AUTHOR: Jean-Michel Gorius
+#+STARTUP: showeverything
+
+* PRELUDE
+Make this file run (slightly) faster with lexical bindings. See
+[[[[https://nullprogram.com/blog/2016/12/22/]]][this blog post by Chris Wellons]]
+for all the details.
+#+begin_src emacs-lisp :tangle yes
+;;; config.el -*- lexical-binding: t; -*-
+#+end_src
+
+* PERSONAL INFORMATION
+Emacs uses a few bits of personal information that are transmitted to GPG, email
+clients and used for file templates.
+#+begin_src emacs-lisp :tangle yes
+(setq user-full-name "Jean-Michel Gorius"
+      user-mail-address "jean-michel.gorius@ens-rennes.fr")
+#+end_src
+
+* THEME
+There are two different ways to load a theme in Doom Emacs. Both assume that the
+theme is installed and available. We can either set ~doom-theme~ or manually
+load a theme using ~load-theme~.
+#+begin_src emacs-lisp :tangle yes
+(setq doom-theme 'doom-one)
+#+end_src
+
+* ORG MODE
+Set the default location for =org-mode= files. Note that this must be set before
+=org= actually loads.
+#+begin_src emacs-lisp :tangle yes
+(setq org-directory "~/org/"
+      org-roam-directory (concat org-directory "notes/")
+      org-roam-db-location (concat org-roam-directory ".org-roam.db"))
+#+end_src
+
+Set additional =org-mode= parameters.
+#+begin_src emacs-lisp :tangle yes
+(after! org
+  (setq org-agenda-files '("~/org/agenda.org"))
+  (setq org-log-done 'time))
+#+end_src
+
+** ROAM SERVER
+The =org-roam-server= package provides a web interface to the =org-roam=
+database, which is nice to have when exploring notes.
+#+begin_src emacs-lisp :tangle yes
+(use-package! org-roam-server
+  :config
+  (setq org-roam-server-host "127.0.0.1"
+        org-roam-server-port 8080
+        org-roam-server-export-inline-images t
+        org-roam-server-authenticate nil
+        org-roam-server-network-label-truncate t
+        org-roam-server-network-label-truncate-length 60
+        org-roam-server-network-label-wrap-length 20)
+  (defun org-roam-server-open ()
+    "Ensure the server is active, then open the roam graph."
+    (interactive)
+    (smartparens-global-mode -1)
+    (org-roam-server-mode 1)
+    (browse-url-xdg-open
+     (format "http://localhost:%d" org-roam-server-port))
+    (smartparens-global-mode 1)))
+#+end_src
+Note that we disable =smart-parens= before enabling =org-roam-server-mode= since
+it appears to be causing issues with the file preview. See
+[[[[https://github.com/org-roam/org-roam-server/issues/115]]][this Github issue]]
+for additional details.
+
+* GENERAL APPEARANCE SETTINGS
+Who doesn't display line numbers? Seriously?
+#+begin_src emacs-lisp :tangle yes
+(setq display-line-numbers-type t)
+#+end_src
+
+When creating a new window, take window space from all windows, not just the
+current one.
+#+begin_src emacs-lisp :tangle yes
+(setq-default window-combination-resize t)
+#+end_src
+
+Stretch the cursor to the glyph width in case we are working with
+non-standard-sized glyphs.
+#+begin_src emacs-lisp :tangle yes
+(setq-default x-stretch-cursor t)
+#+end_src
+
+Use Unicode ellipsis characters instead of '...' when truncating lines. This
+saves up some space.
+#+begin_src emacs-lisp :tangle yes
+(setq truncate-string-ellipsis "…")
+#+end_src
+
+* UNDO AND SAVE SETTINGS
+Raise the undo limit to 100MB and enable fine undo mode. Outside of fine edit
+mode, all editing operations performed while in insert mode are treated as a
+single blob. We prefer to have finer grain control over what has to be undone
+when exiting insert mode. Also enable auto-saving because, well, you never know.
+#+begin_src emacs-lisp :tangle yes
+(setq undo-limit 100000000
+      evil-want-fine-undo t
+      auto-save-default t)
+#+end_src
+
+* EDITING EXPERIENCE
+Iterate through CamelCase words instead of treating them as a single unit.
+#+begin_src emacs-lisp :tangle yes
+(global-subword-mode 1)
+#+end_src
+
+Turn off ~visual-line-mode~ and enable ~auto-fill-mode~ for all text modes. This
+helps us stay inside of the character width limit defined by the fill column.
+#+begin_src emacs-lisp :tangle yes
+(remove-hook 'text-mode-hook #'visual-line-mode)
+(add-hook 'text-mode-hook #'auto-fill-mode)
+#+end_src
+
+Disable =mixed-pitch= when entering Zen mode. The mixed typefaces don't look
+very nice and I prefer to stick with the monospaced font used in normal editing
+mode.
+#+begin_src emacs-lisp :tangle yes
+(remove-hook 'writeroom-mode-hook #'+zen-enable-mixed-pitch-mode-h)
+#+end_src
+
+* DEFT
+Setup the default notes directory for =deft= to the same directory as
+=org-roam= notes. This allows =deft= to be used for easy access and browsing of
+my personal Zettelkasten.
+#+begin_src emacs-lisp :tangle yes
+(setq deft-directory org-roam-directory)
+#+end_src
