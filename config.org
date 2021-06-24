@@ -52,7 +52,7 @@ Define =org-capture= templates.
 
 Disable the fill column indicator line for =org= files.
 #+begin_src emacs-lisp :tangle yes
-(setq-hook! 'org-mode-hook fill-column nil)
+(setq-hook! 'org-mode-hook display-fill-column-indicator nil)
 #+end_src
 
 * GENERAL APPEARANCE SETTINGS
