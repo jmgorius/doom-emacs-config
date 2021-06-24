@@ -30,44 +30,30 @@ load a theme using ~load-theme~.
 Set the default location for =org-mode= files. Note that this must be set before
 =org= actually loads.
 #+begin_src emacs-lisp :tangle yes
-(setq org-directory "~/org/"
-      org-roam-directory (concat org-directory "notes/")
-      org-roam-db-location (concat org-roam-directory ".org-roam.db"))
+(setq org-directory "~/org/")
 #+end_src
 
 Set additional =org-mode= parameters.
 #+begin_src emacs-lisp :tangle yes
 (after! org
-  (setq org-agenda-files '("~/org/agenda.org"))
+  (setq org-agenda-files '("~/org/agenda.org" "~/org/todo.org"))
   (setq org-log-done 'time))
 #+end_src
 
-** ROAM SERVER
-The =org-roam-server= package provides a web interface to the =org-roam=
-database, which is nice to have when exploring notes.
+Define =org-capture= templates.
 #+begin_src emacs-lisp :tangle yes
-(use-package! org-roam-server
-  :config
-  (setq org-roam-server-host "127.0.0.1"
-        org-roam-server-port 8080
-        org-roam-server-export-inline-images t
-        org-roam-server-authenticate nil
-        org-roam-server-network-label-truncate t
-        org-roam-server-network-label-truncate-length 60
-        org-roam-server-network-label-wrap-length 20)
-  (defun org-roam-server-open ()
-    "Ensure the server is active, then open the roam graph."
-    (interactive)
-    (smartparens-global-mode -1)
-    (org-roam-server-mode 1)
-    (browse-url-xdg-open
-     (format "http://localhost:%d" org-roam-server-port))
-    (smartparens-global-mode 1)))
+(after! org
+  (setq org-capture-templates
+        '(("t" "Todo" entry (file+headline "~/org/todo.org" "Tasks")
+           "* TODO %?\n  %i")
+          ("n" "Personal note" entry (file+headline "~/org/notes.org" "Inbox")
+           "* %?\nCaptured on %U\n  %i\n"))))
 #+end_src
-Note that we disable =smart-parens= before enabling =org-roam-server-mode= since
-it appears to be causing issues with the file preview. See
-[[[[https://github.com/org-roam/org-roam-server/issues/115]]][this Github issue]]
-for additional details.
+
+Disable the fill column indicator line for =org= files.
+#+begin_src emacs-lisp :tangle yes
+(setq-hook! 'org-mode-hook fill-column nil)
+#+end_src
 
 * GENERAL APPEARANCE SETTINGS
 Who doesn't display line numbers? Seriously?
@@ -122,12 +108,4 @@ very nice and I prefer to stick with the monospaced font used in normal editing
 mode.
 #+begin_src emacs-lisp :tangle yes
 (remove-hook 'writeroom-mode-hook #'+zen-enable-mixed-pitch-mode-h)
-#+end_src
-
-* DEFT
-Setup the default notes directory for =deft= to the same directory as
-=org-roam= notes. This allows =deft= to be used for easy access and browsing of
-my personal Zettelkasten.
-#+begin_src emacs-lisp :tangle yes
-(setq deft-directory org-roam-directory)
 #+end_src
